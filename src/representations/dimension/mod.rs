@@ -1,6 +1,5 @@
 mod amount;
 mod angle;
-mod chemical;
 mod length;
 mod macros;
 mod mass;
@@ -14,12 +13,7 @@ use std::ops::Neg;
 use std::str::FromStr;
 
 pub use {
-    amount::Amount,
-    angle::Angle,
-    chemical::{Compound, Element},
-    length::Length,
-    mass::Mass,
-    temperature::TemperatureInterval,
+    amount::Amount, angle::Angle, length::Length, mass::Mass, temperature::TemperatureInterval,
     time::Time,
 };
 
@@ -36,41 +30,41 @@ pub enum QuantityKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Quantity {
-    Length(length::Length),
-    Time(time::Time),
-    Mass(mass::Mass, Option<Compound>),
-    Amount(amount::Amount, Option<Compound>),
-    Angle(angle::Angle),
-    TemperatureInterval(temperature::TemperatureInterval),
+    Length(Length),
+    Time(Time),
+    Mass(Mass),
+    Amount(Amount),
+    Angle(Angle),
+    TemperatureInterval(TemperatureInterval),
 }
 
 impl FromStr for Quantity {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if length::Length::from_str(s).is_ok() {
-            return Ok(Quantity::Length(length::Length::from_str(s).unwrap()));
+        if Length::from_str(s).is_ok() {
+            return Ok(Quantity::Length(Length::from_str(s)?));
         }
 
-        if time::Time::from_str(s).is_ok() {
-            return Ok(Quantity::Time(time::Time::from_str(s).unwrap()));
+        if Time::from_str(s).is_ok() {
+            return Ok(Quantity::Time(Time::from_str(s)?));
         }
 
-        if mass::Mass::from_str(s).is_ok() {
-            return Ok(Quantity::Mass(mass::Mass::from_str(s).unwrap(), None));
+        if Mass::from_str(s).is_ok() {
+            return Ok(Quantity::Mass(Mass::from_str(s)?));
         }
 
-        if amount::Amount::from_str(s).is_ok() {
-            return Ok(Quantity::Amount(amount::Amount::from_str(s).unwrap(), None));
+        if Amount::from_str(s).is_ok() {
+            return Ok(Quantity::Amount(Amount::from_str(s)?));
         }
 
-        if angle::Angle::from_str(s).is_ok() {
-            return Ok(Quantity::Angle(angle::Angle::from_str(s).unwrap()));
+        if Angle::from_str(s).is_ok() {
+            return Ok(Quantity::Angle(Angle::from_str(s)?));
         }
 
-        if temperature::TemperatureInterval::from_str(s).is_ok() {
+        if TemperatureInterval::from_str(s).is_ok() {
             return Ok(Quantity::TemperatureInterval(
-                temperature::TemperatureInterval::from_str(s).unwrap(),
+                TemperatureInterval::from_str(s)?,
             ));
         }
 
@@ -79,20 +73,12 @@ impl FromStr for Quantity {
 }
 
 impl Quantity {
-    pub fn with_chemical(self, compound: Compound) -> Self {
-        match self {
-            Quantity::Mass(mass, _) => Quantity::Mass(mass, Some(compound)),
-            Quantity::Amount(amount, _) => Quantity::Amount(amount, Some(compound)),
-            _ => self,
-        }
-    }
-
     pub fn quantity_kind(&self) -> QuantityKind {
         match self {
             Quantity::Length(_) => QuantityKind::Length,
             Quantity::Time(_) => QuantityKind::Time,
-            Quantity::Mass(_, _) => QuantityKind::Mass,
-            Quantity::Amount(_, _) => QuantityKind::Amount,
+            Quantity::Mass(_) => QuantityKind::Mass,
+            Quantity::Amount(_) => QuantityKind::Amount,
             Quantity::Angle(_) => QuantityKind::Angle,
             Quantity::TemperatureInterval(_) => QuantityKind::Temperature,
         }
@@ -102,20 +88,8 @@ impl Quantity {
         match self {
             Quantity::Length(length) => length.shorthand().to_string(),
             Quantity::Time(time) => time.shorthand().to_string(),
-            Quantity::Mass(mass, compound) => {
-                if let Some(compound) = compound {
-                    mass.shorthand().to_string() + " " + &*compound.to_string()
-                } else {
-                    mass.shorthand().to_string()
-                }
-            }
-            Quantity::Amount(amount, compound) => {
-                if let Some(compound) = compound {
-                    amount.shorthand().to_string() + " " + &*compound.to_string()
-                } else {
-                    amount.shorthand().to_string()
-                }
-            }
+            Quantity::Mass(mass) => mass.shorthand().to_string(),
+            Quantity::Amount(amount) => amount.shorthand().to_string(),
             Quantity::Angle(angle) => angle.shorthand().to_string(),
             Quantity::TemperatureInterval(temperature) => temperature.shorthand().to_string(),
         }
@@ -125,8 +99,8 @@ impl Quantity {
         match self {
             Quantity::Length(length) => length.ratio(),
             Quantity::Time(time) => time.ratio(),
-            Quantity::Mass(mass, _) => mass.ratio(),
-            Quantity::Amount(amount, _) => amount.ratio(),
+            Quantity::Mass(mass) => mass.ratio(),
+            Quantity::Amount(amount) => amount.ratio(),
             Quantity::Angle(angle) => angle.ratio(),
             Quantity::TemperatureInterval(temperature) => temperature.ratio(),
         }
@@ -148,7 +122,7 @@ impl Display for Dimension {
                 if !numerator.is_empty() {
                     quantity_shorthand = format!("*{}", quantity_shorthand);
                 }
-                numerator.push_str(&*quantity_shorthand);
+                numerator.push_str(&quantity_shorthand);
                 if *power > Float::from(1) {
                     numerator.push_str(&format!("^{}", power));
                 }
@@ -156,7 +130,7 @@ impl Display for Dimension {
                 if !denominator.is_empty() {
                     quantity_shorthand = format!("*{}", quantity_shorthand);
                 }
-                denominator.push_str(&*quantity_shorthand);
+                denominator.push_str(&quantity_shorthand);
                 if *power != Float::from(-1) {
                     denominator.push_str(&format!("^{}", power.clone().neg()));
                 }
@@ -286,65 +260,7 @@ impl Dimension {
                 }
             }
             if !found {
-                // Try to convert chemical to mass or amount
-                if let Quantity::Mass(mass, Some(chemical)) = quantity {
-                    for (other_quantity, other_power) in other.0.iter() {
-                        if let Quantity::Amount(amount, other_chemical) = other_quantity {
-                            if let Some(other_chemical) = other_chemical {
-                                if other_chemical != chemical {
-                                    continue;
-                                }
-                            }
-
-                            if *power != Float::from(1.) && *other_power != Float::from(1.) {
-                                continue;
-                            }
-
-                            // Convert amount to moles and mass to grams
-                            let amount_ratio = &Amount::Mole.ratio() / &amount.ratio();
-                            let mass_ratio = &Mass::Gram.ratio() / &mass.ratio();
-
-                            let mut quantity_ratio = &mass_ratio / &amount_ratio;
-
-                            // Divide by particulate mass
-                            quantity_ratio = &quantity_ratio
-                                * &Float::parse(&*chemical.particulate_mass().to_string()).unwrap();
-
-                            ratio = &ratio * &quantity_ratio;
-                            found = true;
-                        }
-                    }
-                } else if let Quantity::Amount(amount, Some(chemical)) = quantity {
-                    for (other_quantity, other_power) in other.0.iter() {
-                        if let Quantity::Mass(mass, other_chemical) = other_quantity {
-                            if let Some(other_chemical) = other_chemical {
-                                if other_chemical != chemical {
-                                    continue;
-                                }
-                            }
-
-                            if *power != Float::from(1.) && *other_power != Float::from(1.) {
-                                continue;
-                            }
-
-                            // Convert amount to moles and mass to grams
-                            let amount_ratio = &Amount::Mole.ratio() / &amount.ratio();
-                            let mass_ratio = &Mass::Gram.ratio() / &mass.ratio();
-
-                            let mut quantity_ratio = &amount_ratio / &mass_ratio;
-
-                            // Multiply by particulate mass
-                            quantity_ratio = &quantity_ratio
-                                / &Float::parse(&*chemical.particulate_mass().to_string()).unwrap();
-
-                            ratio = &ratio * &quantity_ratio;
-                            found = true;
-                        }
-                    }
-                }
-                if !found {
-                    return None;
-                }
+                return None;
             }
         }
 

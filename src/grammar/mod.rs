@@ -26,7 +26,6 @@ lazy_static::lazy_static! {
             .op(Op::infix(multiply, Left)
                 | Op::infix(divide, Left)
                 | Op::prefix(negative)
-                | Op::postfix(convert)
                 | Op::postfix(percent))
             .op(Op::infix(exponent, Right))
             .op(Op::postfix(factorial))
@@ -34,7 +33,7 @@ lazy_static::lazy_static! {
 }
 
 pub fn parse_unit_expr(pair: Pair<Rule>) -> ParsedDimension {
-    let mut pairs = pair.clone().into_inner();
+    let pairs = pair.clone().into_inner();
     let numerator = pairs.find_first_tagged("numerator");
     let denominator = pairs.find_first_tagged("denominator");
 
@@ -54,49 +53,21 @@ pub fn parse_unit_expr(pair: Pair<Rule>) -> ParsedDimension {
                     .find_first_tagged("power")
                     .map_or(1, |pair| pair.as_str().parse().unwrap());
 
-                if unit
+                let name = unit
                     .clone()
                     .into_inner()
                     .find_first_tagged("name")
-                    .is_some()
-                {
-                    // Unit has chemical
-                    let chemical = unit
-                        .clone()
-                        .into_inner()
-                        .find_first_tagged("chemical")
-                        .unwrap()
-                        .as_str()
-                        .to_string();
-                    let name = unit
-                        .clone()
-                        .into_inner()
-                        .find_first_tagged("name")
-                        .unwrap()
-                        .as_str()
-                        .to_string();
+                    .map_or(unit.as_str().to_string(), |name_pair| {
+                        name_pair.as_str().to_string()
+                    });
 
-                    array.push((
-                        ParsedUnit {
-                            name,
-                            chemical: Some(chemical),
-                            span: unit.as_span().into(),
-                        },
-                        power,
-                    ));
-                } else {
-                    // Unit has no chemical
-                    let name = unit.as_str().to_string();
-
-                    array.push((
-                        ParsedUnit {
-                            name,
-                            chemical: None,
-                            span: unit.as_span().into(),
-                        },
-                        power,
-                    ));
-                }
+                array.push((
+                    ParsedUnit {
+                        name,
+                        span: unit.as_span().into(),
+                    },
+                    power,
+                ));
             });
         }
     }
@@ -115,50 +86,6 @@ pub fn parse_unit_expr(pair: Pair<Rule>) -> ParsedDimension {
             .find(|pair| pair.as_rule() == Rule::unit_mul_group)
         {
             parse_mul_group(mul_group, &mut units.numerator);
-        } else if let Some(unit) = pairs.find(|pair| pair.as_rule() == Rule::ungrouped_unit_atom) {
-            if unit
-                .clone()
-                .into_inner()
-                .find_first_tagged("name")
-                .is_some()
-            {
-                // Unit has chemical.rs
-                let chemical = unit
-                    .clone()
-                    .into_inner()
-                    .find_first_tagged("chemical")
-                    .unwrap()
-                    .as_str()
-                    .to_string();
-                let name = unit
-                    .clone()
-                    .into_inner()
-                    .find_first_tagged("name")
-                    .unwrap()
-                    .as_str()
-                    .to_string();
-
-                units.numerator.push((
-                    ParsedUnit {
-                        name,
-                        chemical: Some(chemical),
-                        span: unit.as_span().into(),
-                    },
-                    1,
-                ));
-            } else {
-                // Unit has no chemical.rs
-                let name = unit.as_str().to_string();
-
-                units.numerator.push((
-                    ParsedUnit {
-                        name,
-                        chemical: None,
-                        span: unit.as_span().into(),
-                    },
-                    1,
-                ));
-            }
         }
     }
 
@@ -194,23 +121,6 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> ParsedExpr {
                 name: primary.as_str().to_string(),
                 span: primary.as_span().into(),
             },
-            Rule::ungrouped_function => {
-                let primary_span = primary.as_span();
-                let inner = primary.into_inner();
-                let name_pair = inner.find_first_tagged("name").unwrap();
-
-                let name = name_pair.as_str().to_string();
-                let name_span = name_pair.as_span();
-
-                let arg = inner.find_first_tagged("input").unwrap();
-                ParsedExpr::FunctionCall {
-                    name,
-                    args: vec![parse_expr(Pairs::single(arg))],
-                    base: None,
-                    span: primary_span.into(),
-                    function_span: name_span.into(),
-                }
-            }
             Rule::grouped_function | Rule::base_function => {
                 let primary_span = primary.as_span();
                 let inner = primary.into_inner();
@@ -276,12 +186,6 @@ pub fn parse_expr(pairs: Pairs<Rule>) -> ParsedExpr {
             let op = match op_pairs.as_rule() {
                 Rule::factorial => OpPost::Factorial,
                 Rule::percent => OpPost::Percent,
-                Rule::convert => OpPost::Convert(parse_unit_expr(
-                    op_pairs
-                        .into_inner()
-                        .find(|pair| pair.as_rule() == Rule::units_expr)
-                        .unwrap(),
-                )),
                 rule => unreachable!("Expr::parse expected postfix operation, found {:?}", rule),
             };
             ParsedExpr::UnOpPost {
@@ -338,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_parse_expr() {
-        let _expr = parse_expr(SiffraParser::parse(Rule::expr, "log2(5(x)(y)) as mol %").unwrap());
+        let _expr = parse_expr(SiffraParser::parse(Rule::expr, "log2(5(x)(y))").unwrap());
         let _expr = parse_expr(SiffraParser::parse(Rule::expr, "a times 2% of 3").unwrap());
     }
 
@@ -346,17 +250,12 @@ mod tests {
     fn test_parse_line() {
         let line = parse_line(SiffraParser::parse(Rule::line, "x = 5").unwrap());
         assert!(matches!(line, ParsedLine::Variable(_, _)));
-        let line = parse_line(SiffraParser::parse(Rule::line, "log2(5(x)(y)) as mol %").unwrap());
+        let line = parse_line(SiffraParser::parse(Rule::line, "log2(5(x)(y))").unwrap());
         assert!(matches!(line, ParsedLine::Expression(_)));
         let line = parse_line(SiffraParser::parse(Rule::line, "// This is a comment").unwrap());
         assert!(matches!(line, ParsedLine::Comment));
         let line = parse_line(SiffraParser::parse(Rule::line, "/* This is a comment */").unwrap());
         assert!(matches!(line, ParsedLine::Comment));
-    }
-
-    #[test]
-    fn test_ungrouped_functions() {
-        let _expr = parse_expr(SiffraParser::parse(Rule::expr, "log 5a").unwrap());
     }
 
     #[test]

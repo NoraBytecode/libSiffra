@@ -20,7 +20,7 @@ impl From<f64> for Value {
 impl Value {
     pub fn new(value: Float, dimension: Option<Dimension>) -> Self {
         Self {
-            dimension: dimension.unwrap_or(Default::default()),
+            dimension: dimension.unwrap_or_default(),
             value,
         }
     }
@@ -160,8 +160,8 @@ mod test {
     #[test]
     fn dimension_sanity_check_returns_true_for_sane_dimension() {
         let dimension = Dimension(vec![
-            (Quantity::Length(dimension::Length::Meter), Float::from(2)),
-            (Quantity::Time(dimension::Time::Second), Float::from(1)),
+            (Quantity::Length(Length::Meter), Float::from(2)),
+            (Quantity::Time(Time::Second), Float::from(1)),
         ]);
 
         assert!(dimension.sanity_check());
@@ -170,11 +170,8 @@ mod test {
     #[test]
     fn dimension_sanity_check_returns_false_for_insane_dimension() {
         let dimension = Dimension(vec![
-            (Quantity::Length(dimension::Length::Meter), Float::from(2)),
-            (
-                Quantity::Length(dimension::Length::Kilometer),
-                Float::from(1),
-            ),
+            (Quantity::Length(Length::Meter), Float::from(2)),
+            (Quantity::Length(Length::Kilometer), Float::from(1)),
         ]);
 
         assert!(!dimension.sanity_check());
@@ -185,7 +182,7 @@ mod test {
         let value1 = Value::new(
             Float::parse("2").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("1").unwrap(),
             )])),
         );
@@ -193,7 +190,7 @@ mod test {
         let value2 = Value::new(
             Float::parse("52").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("1").unwrap(),
             )])),
         );
@@ -209,7 +206,7 @@ mod test {
         let value1 = Value::new(
             Float::parse("2").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Time(dimension::Time::Second),
+                Quantity::Time(Time::Second),
                 Float::parse("1").unwrap(),
             )])),
         );
@@ -217,7 +214,7 @@ mod test {
         let value2 = Value::new(
             Float::parse("2").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("1").unwrap(),
             )])),
         );
@@ -232,7 +229,7 @@ mod test {
         let value1 = Value::new(
             Float::parse("2").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("2").unwrap(),
             )])),
         );
@@ -240,7 +237,7 @@ mod test {
         let value2 = Value::new(
             Float::parse("3").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Time(dimension::Time::Second),
+                Quantity::Time(Time::Second),
                 Float::parse("3").unwrap(),
             )])),
         );
@@ -256,7 +253,7 @@ mod test {
         let value1 = Value::new(
             Float::parse("10").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("2").unwrap(),
             )])),
         );
@@ -264,7 +261,7 @@ mod test {
         let value2 = Value::new(
             Float::parse("2").unwrap(),
             Some(Dimension(vec![(
-                Quantity::Length(dimension::Length::Meter),
+                Quantity::Length(Length::Meter),
                 Float::parse("2").unwrap(),
             )])),
         );

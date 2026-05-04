@@ -18,6 +18,12 @@ pub enum VariableAccessError {
     Error(SiffraExecutionError),
 }
 
+impl Default for SiffraState {
+    fn default() -> Self {
+        SiffraState::new()
+    }
+}
+
 impl SiffraState {
     pub fn new() -> Self {
         Self {

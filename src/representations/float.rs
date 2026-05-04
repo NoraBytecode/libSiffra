@@ -20,12 +20,12 @@ const MAX_LEN_BEFORE_SCIENTIFIC_NOTATION: i32 = 9;
 pub struct Float(BigFloat);
 
 impl Float {
-    pub fn parse(s: &str) -> Result<Self, ()> {
+    pub fn parse(s: &str) -> Result<Self, &str> {
         let mut cache = CONST_CACHE.lock().unwrap();
-        let s = s.trim().replace('_', "").replace(',', "");
-        let res = BigFloat::parse(&s, Radix::Dec, PRECISION, ROUNDING_MODE, &mut *cache);
+        let s = s.trim().replace(['_',','], "");
+        let res = BigFloat::parse(&s, Radix::Dec, PRECISION, ROUNDING_MODE, &mut cache);
         if res.is_nan() {
-            Err(())
+            Err("Nan")
         } else {
             Ok(Self(res))
         }
@@ -43,17 +43,17 @@ impl Float {
 
     pub fn pow(&self, other: &Self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.pow(&other.0, PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.pow(&other.0, PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn ln(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.ln(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.ln(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn log10(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.log10(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.log10(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn sqrt(&self) -> Self {
@@ -62,37 +62,37 @@ impl Float {
 
     pub fn sin(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.sin(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.sin(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn cos(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.cos(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.cos(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn tan(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.tan(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.tan(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn asin(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.asin(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.asin(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn acos(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.acos(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.acos(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn atan(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.atan(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.atan(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn exp(&self) -> Self {
         let mut cache = CONST_CACHE.lock().unwrap();
-        Self(self.0.exp(PRECISION, ROUNDING_MODE, &mut *cache))
+        Self(self.0.exp(PRECISION, ROUNDING_MODE, &mut cache))
     }
 
     pub fn recip(&self) -> Self {
@@ -109,12 +109,12 @@ impl Display for Float {
         let mut cache = CONST_CACHE.lock().unwrap();
         let string = self
             .0
-            .format(Radix::Dec, ROUNDING_MODE, &mut *cache)
+            .format(Radix::Dec, ROUNDING_MODE, &mut cache)
             .unwrap();
 
         // In scientific notation
         let string = string.split('e').collect::<Vec<&str>>();
-        let (Some(mantissa), Some(exponent)) = (string.get(0), string.get(1)) else {
+        let (Some(mantissa), Some(exponent)) = (string.first(), string.get(1)) else {
             write!(f, "{}", string[0])?;
             return Ok(());
         };
@@ -160,17 +160,13 @@ impl Display for Float {
             mantissa.remove(0);
         }
 
-        if exponent <= MAX_LEN_BEFORE_SCIENTIFIC_NOTATION
-            && exponent >= -MAX_LEN_BEFORE_SCIENTIFIC_NOTATION
+        if (-MAX_LEN_BEFORE_SCIENTIFIC_NOTATION..=MAX_LEN_BEFORE_SCIENTIFIC_NOTATION).contains(&exponent)
         {
             // add leading zeros
             mantissa.insert_str(0, &"0".repeat(MAX_LEN_BEFORE_SCIENTIFIC_NOTATION as usize));
 
             // add decimal point
-            mantissa.insert_str(
-                (MAX_LEN_BEFORE_SCIENTIFIC_NOTATION + 1 + exponent) as usize,
-                ".",
-            );
+            mantissa.insert((MAX_LEN_BEFORE_SCIENTIFIC_NOTATION + 1 + exponent) as usize, '.');
 
             // remove trailing zeros
             while mantissa.ends_with('0') {

@@ -55,7 +55,7 @@ impl Expression {
         Expression::new(InnerExpression::Divide(Box::new(lhs), Box::new(rhs)))
     }
 
-    pub fn add(lhs: Expression, rhs: Expression) -> Expression {
+    pub fn addition(lhs: Expression, rhs: Expression) -> Expression {
         Expression::new(InnerExpression::Add(Box::new(lhs), Box::new(rhs)))
     }
 

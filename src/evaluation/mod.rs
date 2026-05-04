@@ -73,9 +73,9 @@ pub fn evaluate_expr(
         InnerExpression::Convert(val, dim) => {
             let val = evaluate_expr(val, state)?;
             if dim.is_unitless() {
-                return Ok(val.with_units(Dimension::default()));
+                Ok(val.with_units(Dimension::default()))
             } else if val.dimension().is_unitless() {
-                return Ok(val.with_units(dim.clone()));
+                Ok(val.with_units(dim.clone()))
             } else {
                 Ok(siffra_try!(
                     val.convert(dim).ok_or(()),

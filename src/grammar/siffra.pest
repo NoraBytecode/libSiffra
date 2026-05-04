@@ -1,0 +1,69 @@
+WHITESPACE = _{ " " }
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (ANY ~ !NEWLINE)* }
+
+digit = { '0'..'9' }
+digits = _{ digit ~ (("," | "_")? ~ digit)* }
+
+ident = @{ (ASCII_ALPHA) ~ (ASCII_ALPHANUMERIC | "_")* }
+
+number = @{ digits ~ ("." ~ digits)? ~ ("E" ~ "-"? ~ digits)? }
+
+integer = @{"-"? ~ ASCII_DIGIT+}
+
+unit_power = ${#unit = ident ~ ("^" ~ #power = integer)?}
+
+unit_mul_group = ${unit_power+}
+
+unit_op = _{ ("in" | "as" | "to" | "into") ~ " " }
+
+units_expr_inner = _{ !unit_op ~ unit_mul_group | (unit_mul_group ~ "/" ~ unit_mul_group | unit_mul_group)}
+
+units_expr = ${ !bin_op ~ ("(" ~ units_expr_inner ~ ")" ~ !"/" | units_expr_inner)}
+
+dimensional_number = ${ number ~ " " ~ units_expr }
+
+unary_op_pre = _{ negative }
+    negative = { "-" }
+
+unary_op_post = _{ factorial | percent }
+    factorial = { "!" }
+    percent = { "%" }
+
+variable = @{ ident }
+function_name = @{ ident }
+
+grouped_atom = _{ number | base_function | grouped_function | paren_expr | variable }
+	base_function_name = @{"log" | "root"}
+    base_function = ${ #name = base_function_name ~ function_base ~ function_input }
+    grouped_function = ${ #name = function_name ~ function_base? ~ function_input }
+    	function_base = ${ ("_"? ~ #base = number) | "_" ~ #base = (variable | grouped_atom)  }
+    	function_input = !{"(" ~  #input = expr ~ ("," ~ #input = expr)* ~ ")" }
+    paren_expr = _{ "(" ~ expr ~ ")" }
+
+grouped_mul_atom = ${ grouped_atom ~ grouped_atom+ }
+
+atom = _{ grouped_mul_atom | dimensional_number | grouped_atom }
+
+bin_op = _{ add | subtract | multiply | divide | exponent }
+    add = { "+" | "plus" }
+	subtract = { "-" | "minus" }
+	multiply = { "*" | "of" | "times" }
+    exponent = { "^" }
+	divide = { "/" | "over" | "divided by" | "divide by" | "by"}
+
+expr = !{ unary_op_pre* ~ atom ~ unary_op_post* ~ (bin_op ~ unary_op_pre* ~ atom ~ unary_op_post*)* }
+
+declaration = !{ "let " ~ variable }
+
+constraint = !{expr ~ "=" ~ expr}
+
+declaration_constraint = !{ "let " ~ variable ~ "=" ~ expr }
+
+variable_constraint = !{variable ~ "=" ~ expr}
+
+comment = @{""}
+macro_name = ${(ASCII_ALPHANUMERIC | "_")*}
+macro_input = ${(ANY ~ !NEWLINE)+}
+macro = ${"#" ~ #name = macro_name ~ (" " ~ #input = macro_input)?}
+
+line = _{ SOI ~ (macro | declaration_constraint | declaration | variable_constraint | constraint | expr | comment) ~ EOI }

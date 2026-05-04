@@ -1,6 +1,5 @@
 use crate::error::SiffraExecutionError;
 use crate::grammar::Span;
-use crate::representations::Compound;
 use crate::representations::{Dimension, Quantity};
 use crate::representations::{Expression, Float, Value};
 use crate::siffra_try;
@@ -16,7 +15,6 @@ pub enum ParsedLine {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParsedUnit {
     pub name: String,
-    pub chemical: Option<String>,
     pub span: Span,
 }
 
@@ -92,67 +90,29 @@ impl TryFrom<ParsedDimension> for Dimension {
 
         for (unit, power) in dimension.numerator {
             if !(unit.name == "unitless" || unit.name == "number") {
-                if let Some(chemical) = unit.chemical {
-                    let compound = siffra_try!(
-                        Compound::parse(chemical.as_str()).ok_or(()),
-                        "Chemical Error",
-                        "Error parsing chemical compound",
+                quantities.push((
+                    siffra_try!(
+                        Quantity::from_str(unit.name.as_str()),
+                        "Unit Error",
+                        format!("Unit '{}' not defined", unit.name),
                         Some(unit.span)
-                    );
-                    quantities.push((
-                        siffra_try!(
-                            Quantity::from_str(unit.name.as_str()),
-                            "Unit Error",
-                            format!("Unit '{}' not defined", unit.name),
-                            Some(unit.span)
-                        )
-                        .with_chemical(compound),
-                        Float::from(power),
-                    ));
-                } else {
-                    quantities.push((
-                        siffra_try!(
-                            Quantity::from_str(unit.name.as_str()),
-                            "Unit Error",
-                            format!("Unit '{}' not defined", unit.name),
-                            Some(unit.span)
-                        ),
-                        Float::from(power),
-                    ));
-                }
+                    ),
+                    Float::from(power),
+                ));
             }
         }
 
         for (unit, power) in dimension.denominator {
             if !(unit.name == "unitless" || unit.name == "number") {
-                if let Some(chemical) = unit.chemical {
-                    let compound = siffra_try!(
-                        Compound::parse(chemical.as_str()).ok_or(()),
+                quantities.push((
+                    siffra_try!(
+                        Quantity::from_str(unit.name.as_str()),
                         "Syntax Error",
-                        "Error parsing compound",
+                        "Error parsing quantity",
                         Some(unit.span)
-                    );
-                    quantities.push((
-                        siffra_try!(
-                            Quantity::from_str(unit.name.as_str()),
-                            "Syntax Error",
-                            "Error parsing quantity",
-                            Some(unit.span)
-                        )
-                        .with_chemical(compound),
-                        Float::from(-power),
-                    ));
-                } else {
-                    quantities.push((
-                        siffra_try!(
-                            Quantity::from_str(unit.name.as_str()),
-                            "Syntax Error",
-                            "Error parsing quantity",
-                            Some(unit.span)
-                        ),
-                        Float::from(-power),
-                    ));
-                }
+                    ),
+                    Float::from(-power),
+                ));
             }
         }
 
@@ -170,7 +130,7 @@ impl TryFrom<ParsedExpr> for Expression {
                     Some(units) => Some(Dimension::try_from(units)?),
                     None => None,
                 };
-                let num = siffra_try!(Float::parse(&*value), "Error parsing number", Some(span));
+                let num = siffra_try!(Float::parse(&value), "Error parsing number", Some(span));
 
                 Ok(Expression::constant(Value::new(num, dimension)).with_span(span))
             }
@@ -232,7 +192,7 @@ impl TryFrom<ParsedExpr> for Expression {
                 let rhs = Box::new(Expression::try_from(*rhs)?);
 
                 match op {
-                    Op::Add => Ok(Expression::add(*lhs, *rhs).with_span(span)),
+                    Op::Add => Ok(Expression::addition(*lhs, *rhs).with_span(span)),
                     Op::Subtract => Ok(Expression::subtract(*lhs, *rhs).with_span(span)),
                     Op::Multiply => Ok(Expression::multiply(*lhs, *rhs).with_span(span)),
                     Op::Divide => Ok(Expression::divide(*lhs, *rhs).with_span(span)),
