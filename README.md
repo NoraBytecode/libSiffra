@@ -1,60 +1,49 @@
-# Siffra
+# libSiffra
 
-Siffra is a beautiful, lightweight, fast, and accurate calculator with support for dimensional analysis.
-The project is currently in heavy development, and is not currently stable yet. However, it is usable.
+libSiffra is a lightweight, fast, and accurate calculating library with support for dimensional analysis.
 
-<div align="center">
-    <img src="screenshot.png" alt="Siffra screenshot" style="border-radius: 0.8rem">
-</div>
+### WARNING: This library is not actively maintained!
 
-## Installation
-### Prebuild Binaries
+## Features that are working and tested
 
-There are provided prebuilt binaries for all supported platforms in the [Releases tab](https://github.com/ImpossibleReality/Siffra/releases).
-
-### Building from source
-To build Siffra from source, you will need to have the following installed:
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Bun](https://bun.sh)
-
-Once you have these installed, you can clone the repository and build Siffra with the following commands:
-```sh
-bun install
-bun run tauri build
-```
-
-You will find the built binary in the `src-tauri/target/release/bundle` directory.
-
-note: Siffra currently only *officially* supports macOS due to testing limitations, but I am working on adding support for Linux and Windows. Please open an issue if you have any problems running Siffra on your platform.
-
-## Planned Features
 - [x] Basic calculator functionality
 - [x] Basic natural language support
-- [x] Syntax highlighting
 - [x] Variables support
 - [x] Dimensional analysis
 - [x] Unit conversion
-  - [x] Basic units
-  - [x] Dimensions w/ multiple units + exponents (ie. m/s^2)
-  - [ ] Derived units (ie. Jules, Newtons, etc.)
-  - [ ] Absolute units (ie. Temperature, time/date, etc.)
-  - [x] Stoichiometry
-  - [ ] Full support for all SI units (including derived)
-  - [ ] Currency/Stock units
-- [ ] Improved syntax + error handling
-- [ ] Support for saving calculations + multi-window support
-- [ ] Custom defined functions
-- [ ] Preferences page
-- [ ] Plugin + theme system
-- [ ] CAS support
-- [ ] Graphing
+    - [x] Basic units
+    - [x] Dimensions w/ multiple units + exponents (ie. m/s^2)
+
+This is library is just a fixed version of the core of the [Siffra](https://github.com/ImpossibleReality/Siffra).
+
+The GUI has been removed, because I didn't want to maintain it.
+The chemistry functionality have been removed, because it would not compile.
+
+## Usage
+
+```toml
+[dependencies]
+libSiffra = { git = "https://github.com/NoraBytecode/libSiffra" }
+```
 
 ## Contributing
 
-Because Siffra is still under heavy development, I am not currently accepting contributions. However, once the project is more stable, I will be accepting contributions. Please do, however, feel free to [open an issue](https://github.com/ImpossibleReality/Siffra/issues/new) if you find a bug or have a feature request.
+Feel free to contribute to this repo, but do not expect timely reactions.
+
+Do not use any type of LLM to contribute!
+I am only even considering accepting contributions, of which the original author can answer questions intelligently.
+
+Because work on Siffra has stopped two years ago, the original author is not accepting contributions.
+
+Feel free to check on the [original repo](https://github.com/ImpossibleReality/Siffra) to contribute the original desktop app.
+
+Please do, however, feel free to [open an issue](https://github.com/NoraBytecode/libSiffra/issues/new) if you find a bug or have a feature request.
 
 ## Supporting the project
-Unlike other calculators that provide similar functionality, Siffra is open-source, which also means I am unable to make a profit off of it. If you would like to support my future work, you can do so by buying me a coffee using the button below. Thank you!
+
+Unlike other calculators that provide similar functionality, Siffra is open-source, which also means I am unable to make a profit off of it.
+If you would like to support my future work, you can do so by buying me a coffee using the button below.
+Thank you!
 
 <a href="https://www.buymeacoffee.com/johannovak" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
