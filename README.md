@@ -35,13 +35,16 @@ I am only even considering accepting contributions, of which the original author
 
 Because work on Siffra has stopped two years ago, the original author is not accepting contributions.
 
-Feel free to check on the [original repo](https://github.com/ImpossibleReality/Siffra) to contribute the original desktop app.
+Feel free to check on the [original repo](https://github.com/ImpossibleReality/Siffra)
+to contribute the original desktop app.
 
-Please do, however, feel free to [open an issue](https://github.com/NoraBytecode/libSiffra/issues/new) if you find a bug or have a feature request.
+Please do, however, feel free to [open an issue](https://github.com/NoraBytecode/libSiffra/issues/new)
+if you find a bug or have a feature request.
 
 ## Supporting the project
 
-Unlike other calculators that provide similar functionality, Siffra is open-source, which also means I am unable to make a profit off of it.
+Unlike other calculators that provide similar functionality, Siffra is open-source,
+which also means I am unable to make a profit off of it.
 If you would like to support my future work, you can do so by buying me a coffee using the button below.
 Thank you!
 

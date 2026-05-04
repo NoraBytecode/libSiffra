@@ -164,7 +164,7 @@ impl TryFrom<ParsedExpr> for Expression {
                         *rhs,
                         Expression::constant(Value::from(-1.0)),
                     )
-                    .with_span(span)),
+                        .with_span(span)),
                 }
             }
             ParsedExpr::UnOpPost { lhs, op, span } => {
@@ -175,12 +175,12 @@ impl TryFrom<ParsedExpr> for Expression {
                         "factorial".to_string(),
                         vec![*lhs],
                     )
-                    .with_span(span)),
+                        .with_span(span)),
                     OpPost::Percent => Ok(Expression::divide(
                         *lhs,
                         Expression::constant(Value::from(100.0)),
                     )
-                    .with_span(span)),
+                        .with_span(span)),
                     OpPost::Convert(dimension) => {
                         Ok(Expression::convert(*lhs, Dimension::try_from(dimension)?)
                             .with_span(span))

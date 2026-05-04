@@ -22,7 +22,7 @@ pub struct Float(BigFloat);
 impl Float {
     pub fn parse(s: &str) -> Result<Self, &str> {
         let mut cache = CONST_CACHE.lock().unwrap();
-        let s = s.trim().replace(['_',','], "");
+        let s = s.trim().replace(['_', ','], "");
         let res = BigFloat::parse(&s, Radix::Dec, PRECISION, ROUNDING_MODE, &mut cache);
         if res.is_nan() {
             Err("Nan")
