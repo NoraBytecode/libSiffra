@@ -42,30 +42,23 @@ impl FromStr for Quantity {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if Length::from_str(s).is_ok() {
-            return Ok(Quantity::Length(Length::from_str(s)?));
+        if let Ok(value) = Length::from_str(s) {
+            return Ok(Quantity::Length(value));
         }
-
-        if Time::from_str(s).is_ok() {
-            return Ok(Quantity::Time(Time::from_str(s)?));
+        if let Ok(value) = Time::from_str(s) {
+            return Ok(Quantity::Time(value));
         }
-
-        if Mass::from_str(s).is_ok() {
-            return Ok(Quantity::Mass(Mass::from_str(s)?));
+        if let Ok(value) = Mass::from_str(s) {
+            return Ok(Quantity::Mass(value));
         }
-
-        if Amount::from_str(s).is_ok() {
-            return Ok(Quantity::Amount(Amount::from_str(s)?));
+        if let Ok(value) = Amount::from_str(s) {
+            return Ok(Quantity::Amount(value));
         }
-
-        if Angle::from_str(s).is_ok() {
-            return Ok(Quantity::Angle(Angle::from_str(s)?));
+        if let Ok(value) = Angle::from_str(s) {
+            return Ok(Quantity::Angle(value));
         }
-
-        if TemperatureInterval::from_str(s).is_ok() {
-            return Ok(Quantity::TemperatureInterval(
-                TemperatureInterval::from_str(s)?,
-            ));
+        if let Ok(value) = TemperatureInterval::from_str(s) {
+            return Ok(Quantity::TemperatureInterval(value));
         }
 
         Err(())
