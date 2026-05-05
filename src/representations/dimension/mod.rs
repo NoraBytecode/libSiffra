@@ -1,8 +1,12 @@
 mod amount;
 mod angle;
+mod charge;
+mod current;
 mod length;
 mod macros;
 mod mass;
+mod power;
+mod resistance;
 mod temperature;
 mod time;
 
@@ -13,8 +17,8 @@ use std::ops::Neg;
 use std::str::FromStr;
 
 pub use {
-    amount::Amount, angle::Angle, length::Length, mass::Mass, temperature::TemperatureInterval,
-    time::Time,
+    amount::Amount, angle::Angle, charge::Charge, current::Current, length::Length, mass::Mass,
+    power::Power, resistance::Resistance, temperature::TemperatureInterval, time::Time,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -26,6 +30,10 @@ pub enum QuantityKind {
     Angle,
     Temperature,
     TemperatureInterval,
+    Current,
+    Resistance,
+    Charge,
+    Power,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,6 +44,10 @@ pub enum Quantity {
     Amount(Amount),
     Angle(Angle),
     TemperatureInterval(TemperatureInterval),
+    Current(Current),
+    Resistance(Resistance),
+    Charge(Charge),
+    Power(Power),
 }
 
 impl FromStr for Quantity {
@@ -60,6 +72,18 @@ impl FromStr for Quantity {
         if let Ok(value) = TemperatureInterval::from_str(s) {
             return Ok(Quantity::TemperatureInterval(value));
         }
+        if let Ok(value) = Current::from_str(s) {
+            return Ok(Quantity::Current(value));
+        }
+        if let Ok(value) = Resistance::from_str(s) {
+            return Ok(Quantity::Resistance(value));
+        }
+        if let Ok(value) = Charge::from_str(s) {
+            return Ok(Quantity::Charge(value));
+        }
+        if let Ok(value) = Power::from_str(s) {
+            return Ok(Quantity::Power(value));
+        }
 
         Err(())
     }
@@ -74,6 +98,10 @@ impl Quantity {
             Quantity::Amount(_) => QuantityKind::Amount,
             Quantity::Angle(_) => QuantityKind::Angle,
             Quantity::TemperatureInterval(_) => QuantityKind::Temperature,
+            Quantity::Current(_) => QuantityKind::Current,
+            Quantity::Resistance(_) => QuantityKind::Resistance,
+            Quantity::Charge(_) => QuantityKind::Charge,
+            Quantity::Power(_) => QuantityKind::Power,
         }
     }
 
@@ -85,6 +113,10 @@ impl Quantity {
             Quantity::Amount(amount) => amount.shorthand().to_string(),
             Quantity::Angle(angle) => angle.shorthand().to_string(),
             Quantity::TemperatureInterval(temperature) => temperature.shorthand().to_string(),
+            Quantity::Current(current) => current.shorthand().to_string(),
+            Quantity::Resistance(resistance) => resistance.shorthand().to_string(),
+            Quantity::Charge(charge) => charge.shorthand().to_string(),
+            Quantity::Power(power) => power.shorthand().to_string(),
         }
     }
 
@@ -96,6 +128,10 @@ impl Quantity {
             Quantity::Amount(amount) => amount.ratio(),
             Quantity::Angle(angle) => angle.ratio(),
             Quantity::TemperatureInterval(temperature) => temperature.ratio(),
+            Quantity::Current(current) => current.ratio(),
+            Quantity::Resistance(resistance) => resistance.ratio(),
+            Quantity::Charge(charge) => charge.ratio(),
+            Quantity::Power(power) => power.ratio(),
         }
     }
 }

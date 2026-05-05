@@ -315,3 +315,27 @@ pub fn evaluate_expr(
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::evaluation::{evaluate_line, SiffraState};
+
+    #[test]
+    fn test_eval_one_line_1_2_3() {
+        let mut state = SiffraState::new();
+        let output = evaluate_line("1+2", &mut state).unwrap().unwrap();
+        assert_eq!(output.value().to_string(), "3");
+        assert!(output.dimension().is_unitless());
+    }
+
+    #[test]
+    fn test_volt_amps() {
+        let mut state = SiffraState::new();
+        evaluate_line("a = 1 V", &mut state).unwrap().unwrap();
+        evaluate_line("b = 1 A", &mut state).unwrap().unwrap();
+        let value = evaluate_line("a * b", &mut state).unwrap().unwrap();
+        assert_eq!(value.value.to_string(), "1");
+        assert_eq!(value.dimension.to_string(), "V*A");
+        // TODO: Implement conversion to Watts
+    }
+}
